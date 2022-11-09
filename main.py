@@ -11,6 +11,4 @@ def start(message):
     bot.send_message(message.chat.id, 'Hello!')
 
 
-# function to be called externally
-def start_bot():
-    bot.polling(none_stop=True, interval=0)
+bot.polling(none_stop=True, interval=0)
