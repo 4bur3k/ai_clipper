@@ -1,0 +1,7 @@
+{
+    "start": "Hello! This Bot will make a clip (actually a slideshow) for your song, using the open image generating neural networks.\n\nIn order to start, we want you to answer some questions. You can answer them using the command \"/set_network\", \"/set_artist\", \"/set_song\".\n\nYou can start the process of creating a clip wit \"/clip\" command.",
+    "rudalle_choice": "You have chosen ruDALL-E to handle your video clip",
+    "diffusion_choice": "You have chosen Diffusion to handle your video clip",
+    "midjourney_choice": "You have chosen MidJourney to handle your video clip",
+    "clip_command": "The clipping process has started.\nYour place in the queue: NaN"
+}
