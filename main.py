@@ -2,18 +2,19 @@ import telebot
 from telebot import types
 import json
 
+ANSWERS = None
+
 with open('tokens.json') as token_file:
     token = json.load(token_file)['Tokens']['Telegram']['APIKey']
 bot = telebot.TeleBot(token)
 
+with open('answers.json') as answers_file:
+    ANSWERS = json.load(answers_file)
+
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, 'Hello! This Bot will make a clip (actually a slideshow) for your song, '
-                                      'using the open image generating neural networks.\n\n'
-                                      'In order to start, we want you to answer some questions.'
-                                      'You can answer them using the command "/set_network", "/set_artist", "/set_song".'
-                                      '\n\nYou can start the process of creating a clip wit "/clip" command.')
+    bot.send_message(message.chat.id, ANSWERS['start'])
 
 
 @bot.message_handler(commands=['set_network'])
@@ -27,13 +28,13 @@ def handle_text(message):
                                       'Hint: ruDALL-E is better in case of russian language', reply_markup=markup)
     try:
         if message == 'ruDALL-E':
-            answer = 'You\'ve chosen ruDALL-E to handle your video clip'
+            answer = ANSWERS['rudalle_choice']
             pass
         elif message == 'Diffusion':
-            answer = 'You\'ve chosen Diffusion to handle your video clip'
+            answer = ANSWERS['diffusion_choice']
             pass
         elif message == 'MidJourney':
-            answer = 'You\'ve chosen MidJourney to handle your video clip'
+            answer = ANSWERS['midjourney_choice']
             pass
 
         neural_network_chosen = message
@@ -54,8 +55,7 @@ def msg(message):
 
 @bot.message_handler(commands=['clip'])
 def msg(message):
-    bot.send_message(message.chat.id, 'The clipping process has started.\n'
-                                      'Your place in the queue: NaN')
+    bot.send_message(message.chat.id, ANSWERS['clip_command'])
 
 
 @bot.message_handler(content_types=['text'])
