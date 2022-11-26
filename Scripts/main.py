@@ -7,7 +7,7 @@ from sqlite3 import Error
 
 
 # Connects application to database
-def create_connection(db_path='users.db'):
+def create_connection(db_path='../users.db'):
     conn = None
     try:
         conn = sqlite3.connect(db_path)
@@ -22,11 +22,11 @@ def create_connection(db_path='users.db'):
 STRINGS = None
 DB_CONNECTION = None
 
-with open('tokens.json') as token_file:
+with open('../tokens.json') as token_file:
     token = json.load(token_file)['Tokens']['Telegram']['APIKey']
 bot = telebot.TeleBot(token)
 
-with open('strings.json') as strings_file:
+with open('../strings.json') as strings_file:
     STRINGS = json.load(strings_file)
 
 
@@ -91,7 +91,7 @@ def start(message):
     bot.send_message(message.chat.id, 'start')
 
 
-if not os.path.isfile('users.db'):
+if not os.path.isfile('../users.db'):
     DB_CONNECTION = create_connection()
     create_table(DB_CONNECTION)
 else:
