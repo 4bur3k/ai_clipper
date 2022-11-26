@@ -11,7 +11,7 @@ def create_connection(db_path='users.db'):
     conn = None
     try:
         conn = sqlite3.connect(db_path)
-        print('con established')
+        print('connection established')
         return conn
     except Error as e:
         print(e)
