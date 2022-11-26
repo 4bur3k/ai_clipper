@@ -1,20 +1,47 @@
 import telebot
 from telebot import types
 import json
+import os.path
+import sqlite3
+from sqlite3 import Error
 
-ANSWERS = None
+
+# Connects application to database
+def create_connection(db_path='users.db'):
+    conn = None
+    try:
+        conn = sqlite3.connect(db_path)
+        print('con established')
+        return conn
+    except Error as e:
+        print(e)
+
+    return conn
+
+
+STRINGS = None
+DB_CONNECTION = None
 
 with open('tokens.json') as token_file:
     token = json.load(token_file)['Tokens']['Telegram']['APIKey']
 bot = telebot.TeleBot(token)
 
-with open('answers.json') as answers_file:
-    ANSWERS = json.load(answers_file)
+with open('strings.json') as strings_file:
+    STRINGS = json.load(strings_file)
+
+
+def create_table(db_con):
+    try:
+        c = db_con.cursor()
+        c.execute(STRINGS['sql_queries']['create_table'])
+        print('table created')
+    except Error as e:
+        print(e)
 
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, ANSWERS['start'])
+    bot.send_message(message.chat.id, STRINGS['bot_answers']['start'])
 
 
 @bot.message_handler(commands=['set_network'])
@@ -28,13 +55,13 @@ def handle_text(message):
                                       'Hint: ruDALL-E is better in case of russian language', reply_markup=markup)
     try:
         if message == 'ruDALL-E':
-            answer = ANSWERS['rudalle_choice']
+            answer = STRINGS['bot_answers']['rudalle_choice']
             pass
         elif message == 'Diffusion':
-            answer = ANSWERS['diffusion_choice']
+            answer = STRINGS['bot_answers']['diffusion_choice']
             pass
         elif message == 'MidJourney':
-            answer = ANSWERS['midjourney_choice']
+            answer = STRINGS['bot_answers']['midjourney_choice']
             pass
 
         neural_network_chosen = message
@@ -55,13 +82,19 @@ def msg(message):
 
 @bot.message_handler(commands=['clip'])
 def msg(message):
-    bot.send_message(message.chat.id, ANSWERS['clip_command'])
+    bot.send_message(message.chat.id, STRINGS['bot_answers']['clip_command'])
 
 
 @bot.message_handler(content_types=['text'])
 def start(message):
 
-    bot.send_message(message.chat.id, '')
+    bot.send_message(message.chat.id, 'start')
 
+
+if not os.path.isfile('users.db'):
+    DB_CONNECTION = create_connection()
+    create_table(DB_CONNECTION)
+else:
+    DB_CONNECTION = create_connection()
 
 bot.polling(none_stop=True, interval=0)
