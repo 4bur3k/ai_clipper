@@ -7,6 +7,6 @@
         "clip_command": "The clipping process has started.\nYour place in the queue: NaN"
     },
     "sql_queries": {
-        "create_table": "CREATE TABLE \"Users\" (\n\t\"Id\"\tTEXT NOT NULL UNIQUE,\n\t\"Artist\"\tTEXT,\n\t\"Song\"\tTEXT,\n\t\"Network\"\tTEXT,\n\t\"Style\"\tTEXT,\n\tPRIMARY KEY(\"Id\")\n);"
+        "create_table": "CREATE TABLE \"Users\" (\n\t\"Id\"\tTEXT NOT NULL UNIQUE,\n\t\"Artist\"\tTEXT,\n\t\"Song\"\tTEXT,\n\t\"Network\"\tTEXT,\n\t\"Style\"\tTEXT,\n\t\"Status\"\tTEXT,\n\tPRIMARY KEY(\"Id\")\n);"
     }
 }
