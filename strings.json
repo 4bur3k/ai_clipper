@@ -4,7 +4,7 @@
         "rudalle_choice": "You have chosen ruDALL-E to handle your video clip",
         "diffusion_choice": "You have chosen Diffusion to handle your video clip",
         "midjourney_choice": "You have chosen MidJourney to handle your video clip",
-        "clip_command": "The clipping process has started.\nYour place in the queue: NaN",
+        "clip_command": "The clipping process has started.\nYour place in the queue: {value}",
         "no_user_reply": "You are not in the users table.\nPlease use the /start command to be add to the table"
     },
     "sql_queries": {
