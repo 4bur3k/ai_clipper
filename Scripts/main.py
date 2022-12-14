@@ -125,14 +125,26 @@ def set_style(message):
 
 
 @bot.message_handler(commands=['clip'])
-def msg(message):
-    bot.send_message(message.chat.id, STRINGS['bot_answers']['clip_command'])
-
-
-@bot.message_handler(content_types=['text'])
-def start(message):
-
-    bot.send_message(message.chat.id, 'start')
+def clip(message):
+    db_con, c = create_connection(DB_PATH)
+    user_exists = c.execute(f"SELECT COUNT(1) FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
+    if user_exists == 0:  # user doesn't exist
+        bot.send_message(message.chat.id, STRINGS['bot_answers']['no_user_reply'])
+    else:
+        user_data = c.execute(f"SELECT * FROM Users WHERE Id = {message.chat.id}").fetchone()
+        print(user_data)
+        if user_data[1] is not None and user_data[2] is not None:  # there is enough data to start clipping
+            max_pos = c.execute(f"SELECT MAX(Position) FROM Users WHERE NOT Id = {message.chat.id}").fetchone()[0]
+            if user_data[3] is not None:  # there is also a network chosen
+                c.execute(f"UPDATE Users SET Position = {max_pos + 1} WHERE Id = {message.chat.id}")
+            else:
+                c.execute(
+                    f"UPDATE Users SET Position = {max_pos + 1}, Network = 'ruDALL-E' WHERE Id = {message.chat.id}")
+            db_con.commit()
+            bot.send_message(message.chat.id, STRINGS['bot_answers']['clip_command'].format(value=max_pos + 1))
+        else:
+            bot.send_message(message.chat.id, 'Whoops! Seems like you haven\'t set the artist or the song you want to'
+                                              'clip.\nUse at least /set_artist and /set_song to choose what to clip.')
 
 
 @bot.message_handler(content_types=['text'])
