@@ -49,7 +49,7 @@ def start(message):
     db_con, c = create_connection(DB_PATH)
     user_exists = c.execute(f"SELECT COUNT(1) FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
     if user_exists == 0:
-        c.execute(f"INSERT INTO Users (Id, Status, Position) VALUES ({message.chat.id}, 'None', -1)")
+        c.execute(f"INSERT INTO Users (Id, Position) VALUES ({message.chat.id}, -1)")
         db_con.commit()
     else:
         print('User already exists')
@@ -72,7 +72,7 @@ def set_network(message):
     print('db closed')
     markup = types.ReplyKeyboardMarkup(row_width=1)
     item_button1 = types.KeyboardButton('ruDALL-E')
-    item_button2 = types.KeyboardButton('Diffusion')
+    item_button2 = types.KeyboardButton('StableDiffusion')
     markup.add(item_button1, item_button2)
     bot.send_message(message.chat.id, 'Choose the network to use.\n'
                                       'Hint: ruDALL-E is better in case of russian language', reply_markup=markup)
@@ -143,39 +143,43 @@ def clip(message):
             db_con.commit()
             bot.send_message(message.chat.id, STRINGS['bot_answers']['clip_command'].format(value=max_pos + 1))
         else:
-            bot.send_message(message.chat.id, 'Whoops! Seems like you haven\'t set the artist or the song you want to'
-                                              'clip.\nUse at least /set_artist and /set_song to choose what to clip.')
+            bot.send_message(message.chat.id, 'Whoops! Seems like you haven\'t set the artist or the song you want to c'
+                                              'lip.\nUse at least /set_artist and /set_song to make clipping possible.')
 
 
 @bot.message_handler(content_types=['text'])
 def handle_text(message):
     db_con, c = create_connection(DB_PATH)
-
     user_exists = c.execute(f"SELECT COUNT(1) FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
+    reply = None
+
     if user_exists == 0:
-        bot.send_message(message.chat.id, STRINGS['bot_answers']['no_user_reply'])
+        reply = STRINGS['bot_answers']['no_user_reply']
     else:
-        print('User already exists')
         status = c.execute(f"SELECT Status FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
         if status == 'Artist':
-            c.execute(f"UPDATE Users SET Artist = {repr(message.text)}, Status = 'None' WHERE Id = {message.chat.id}")
+            c.execute(f"UPDATE Users SET Artist = {repr(message.text)}, Status = NULL WHERE Id = {message.chat.id}")
+            reply = f'The artist, you\'ve chosen is {message.text}'
         elif status == 'Song':
-            c.execute(f"UPDATE Users SET Song = {repr(message.text)}, Status = 'None' WHERE Id = {message.chat.id}")
+            c.execute(f"UPDATE Users SET Song = {repr(message.text)}, Status = NULL WHERE Id = {message.chat.id}")
+            reply = f'The song to be clipped: {message.text}'
         elif status == 'Network':
-            if message.text == 'ruDALL-E' or message.text == 'Diffusion':
+            if message.text == 'ruDALL-E' or message.text == 'StableDiffusion':
                 c.execute(
-                    f"UPDATE Users SET Network = {repr(message.text)}, Status = 'None' WHERE Id = {message.chat.id}")
+                    f"UPDATE Users SET Network = {repr(message.text)}, Status = NULL WHERE Id = {message.chat.id}")
+                reply = f'Set the network: {message.text}'
             else:
-                c.execute(f"UPDATE Users SET Status = 'None' WHERE Id = {message.chat.id}")
-                print('AAAAA, naebalovo!!!')
+                c.execute(f"UPDATE Users SET Status = NULL WHERE Id = {message.chat.id}")
+                reply = f'Such network as {message.text} does not exist'
 
         elif status == 'Style':
-            c.execute(f"UPDATE Users SET Style = {repr(message.text)}, Status = 'None' WHERE Id = {message.chat.id}")
+            c.execute(f"UPDATE Users SET Style = {repr(message.text)}, Status = NULL WHERE Id = {message.chat.id}")
+            reply = f'Set style: {message.text}'
         else:
             print('status is not recognized')
+            reply = 'Use the listed commands to add the information needed'
         db_con.commit()
-        print(f'Set {status} == {message.text}')
-        bot.send_message(message.chat.id, f'Set {status} = {message.text}')
+    bot.send_message(message.chat.id, reply, reply_markup=types.ReplyKeyboardRemove())
     c.close()
     db_con.close()
 
