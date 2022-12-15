@@ -20,7 +20,6 @@ def create_connection(db_path='../users.db'):
     # return conn, c
 
 
-STRINGS = None
 DB_PATH = '../users.db'
 
 with open('../tokens.json') as token_file:
@@ -151,7 +150,6 @@ def clip(message):
 def handle_text(message):
     db_con, c = create_connection(DB_PATH)
     user_exists = c.execute(f"SELECT COUNT(1) FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
-    reply = None
 
     if user_exists == 0:
         reply = STRINGS['bot_answers']['no_user_reply']
