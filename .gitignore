@@ -3,3 +3,4 @@ tokens.json
 __pycache__
 users.db-journal
 users.db
+ai_clipper.log
