@@ -1,9 +1,14 @@
 import lyricsgenius as genius
 
 clientAccessToken = 'CXXnPdAycfaibUkry8LWSDmB5ojnrXUVUXxL7HFvaX9kQQsJZjm3hOPTgayuA8iG'
-song_name = input()
 api = genius.Genius(clientAccessToken)
-song = api.search_song(song_name)
+
+song = None
+while song is None:
+    songName = input()
+    song = api.search_song(songName) # get song using song name from site
+    if song is None:
+        print("Такой песни не найдено, попробуйте снова")
 lyrics = [row for row in song.lyrics.split('\n')[1:] if len(row) > 0 and row[0] != "["] # delete title and technic information, like [verse], [chorus] etc.
 
 embedEdge = -1
