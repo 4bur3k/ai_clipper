@@ -182,6 +182,9 @@ def clip(message):
                                                                                                ' used by default'
                 db_con.commit()
                 logging.info(f'User {message.chat.username}:{message.chat.id} is clipping. {user_data}')
+
+                # !!!HERE SHOULD BE THE CLIPPING PROCESS!!!
+
             else:
                 reply = 'Whoops! Seems like you haven\'t set the artist or the song you want to clip.\nUse at least' \
                         ' /set_artist and /set_song to make clipping possible.'
