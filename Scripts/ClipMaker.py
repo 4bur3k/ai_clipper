@@ -11,9 +11,11 @@ from bs4 import BeautifulSoup
 
 class ClipMaker:
     songName = ""
+    artistName = ""
 
-    def __init__(self, name):
-        self.songName = name
+    def __init__(self, artist, song):
+        self.artistName = artist
+        self.songName = song
 
     def jpeg2mp3(self, dirIn, audioPath, dirOut):
         MP4CODEC = 0x7634706d
