@@ -58,7 +58,7 @@ class ClipMaker:
         song = api.search_song(self.songName)  # get song using song name from site
         if song is None:
             print("Такой песни не найдено, попробуйте снова")
-            return []
+            return None
         lyrics = [row for row in song.lyrics.split('\n')[1:] if
                   len(row) > 0 and row[0] != "["]  # delete title and technic information, like [verse], [chorus] etc.
 
