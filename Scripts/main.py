@@ -5,6 +5,7 @@ import os.path
 import sqlite3
 from sqlite3 import Error
 import logging
+from ClipMaker import ClipMaker
 
 
 # Connects application to database. Returns db_connection, cursor
@@ -183,7 +184,9 @@ def clip(message):
                 db_con.commit()
                 logging.info(f'User {message.chat.username}:{message.chat.id} is clipping. {user_data}')
 
-                # !!!HERE SHOULD BE THE CLIPPING PROCESS!!!
+                clip_maker = ClipMaker(artist=user_data[1], song=user_data[2])
+                lyrics = clip_maker.get_song_text()
+                reply += f'\n\n{lyrics[0]}'
 
             else:
                 reply = 'Whoops! Seems like you haven\'t set the artist or the song you want to clip.\nUse at least' \
