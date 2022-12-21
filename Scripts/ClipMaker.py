@@ -69,6 +69,7 @@ class ClipMaker:
                 embedEdge = i
 
         lyrics[-1] = lyrics[-1][:embedEdge]
+        print('Песня найдена')
         return lyrics  # we got the list of song's lines
 
     def download_music(self, audioFold):

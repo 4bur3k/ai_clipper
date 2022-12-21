@@ -186,11 +186,18 @@ def clip(message):
 
                 clip_maker = ClipMaker(artist=user_data[1], song=user_data[2])
                 lyrics = clip_maker.get_song_text()
-                reply += f'\n\n{lyrics[0]}'
-
+                if lyrics is not None:
+                    reply += f'\n\n{lyrics[0]}'
+                else:
+                    c.execute(f"UPDATE Users SET Artist = NULL, Song = NULL, Network = NULL, Style = NULL,"
+                              f"Status = NULL, Position = -1")
+                    db_con.commit()
+                    reply = STRINGS['bot_answers']['no_such_song_reply'].format(artist=user_data[1], song=user_data[2])
             else:
                 reply = 'Whoops! Seems like you haven\'t set the artist or the song you want to clip.\nUse at least' \
                         ' /set_artist and /set_song to make clipping possible.'
+    c.close()
+    db_con.close()
     bot.send_message(message.chat.id, reply)
 
 
