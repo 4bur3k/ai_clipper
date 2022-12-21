@@ -6,10 +6,18 @@ import sqlite3
 from sqlite3 import Error
 import logging
 from ClipMaker import ClipMaker
+from img_generator import Imaginator
 
+
+
+DB_PATH = '../users.db'
+IMG_DIR_PATH = f'./../data/tmp_imgs/'
+AUD_DIR_PATH = f'./../data/tmp_audio/'
+RES_DIR_PATH = f'./../resoult/'
+CLIP_GENERATOR = Imaginator()
 
 # Connects application to database. Returns db_connection, cursor
-def create_connection(db_path='../users.db'):
+def create_connection(db_path=DB_PATH):
     try:
         db_con = sqlite3.connect(db_path)
         c = db_con.cursor()
@@ -19,7 +27,7 @@ def create_connection(db_path='../users.db'):
         logging.exception(e)
 
 
-DB_PATH = '../users.db'
+
 logging.basicConfig(filename='ai_clipper.log',
                     format='%(asctime)s %(levelname)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S',
@@ -166,7 +174,8 @@ def clip(message):
         else:
             user_data = c.execute(f"SELECT * FROM Users WHERE Id = {message.chat.id}").fetchone()
             if user_data[1] is not None and user_data[2] is not None:  # there IS enough data to start clipping
-                max_pos = c.execute(f"SELECT MAX(Position) FROM Users WHERE NOT Id = {message.chat.id}").fetchone()[0]
+                max_pos = c.execute(f"SELECT MAX(Position) FROM Users WHERE NOT Id = {message.chat.id}").fetchone()[0] # NOT WORKING. THINK ABOUT INITIALIZATION AND CHEKING IT'S NOT NONE
+                max_pos = 1
                 if max_pos == -1:
                     max_pos += 1
                 if user_data[3] is not None:  # there is also a network chosen
@@ -186,6 +195,17 @@ def clip(message):
 
                 clip_maker = ClipMaker(artist=user_data[1], song=user_data[2])
                 lyrics = clip_maker.get_song_text()
+
+                images_was_generated = CLIP_GENERATOR.generateImages(text=lyrics)
+
+                images_was_generated = True #REMOVE!!!!!!!!!!!!!!!!!
+
+                if images_was_generated:
+                    clip_maker.download_music(AUD_DIR_PATH)
+                    clip_maker.jpeg2mp3(IMG_DIR_PATH, AUD_DIR_PATH, RES_DIR_PATH)
+                else:
+                    pass
+                    
                 if lyrics is not None:
                     reply += f'\n\n{lyrics[0]}'
                 else:
