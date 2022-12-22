@@ -53,9 +53,11 @@ class ClipMaker:
     def get_song_text(self):
         clientAccessToken = 'CXXnPdAycfaibUkry8LWSDmB5ojnrXUVUXxL7HFvaX9kQQsJZjm3hOPTgayuA8iG'
         api = genius.Genius(clientAccessToken)
-
-        song = None
-        song = api.search_song(self.songName)  # get song using song name from site
+        artist = api.search_artist(self.artistName, max_songs=3, sort="popularity", include_features=True)
+        if artist is None:
+            print("Такой исполнитель не найден, попробуйте снова")
+            return None
+        song = artist.song(self.songName)  # get song using song name from site
         if song is None:
             print("Такой песни не найдено, попробуйте снова")
             return None
@@ -96,4 +98,3 @@ class ClipMaker:
         audioClip = audioClip.subclip(0,videoClip.end)
         finalClip = videoClip.set_audio(audioClip)
         finalClip.write_videofile('result.mp4')
-
