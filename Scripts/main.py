@@ -167,7 +167,7 @@ def clip(message):
         else:
             user_data = c.execute(f"SELECT * FROM Users WHERE Id = {message.chat.id}").fetchone()
             if user_data[1] is not None and user_data[2] is not None:  # there IS enough data to start clipping
-                model_busy = bool(c.execute("SELECT COUNT(1) FROM Users WHERE Status = 'Clip'"))
+                model_busy = bool(c.execute("SELECT COUNT(1) FROM Users WHERE Status = 'Clip'").fetchone()[0])
                 if not model_busy:  # model not busy
                     if user_data[3] is not None:  # there is also a network chosen
                         c.execute(f"UPDATE Users SET Status = 'Clip' WHERE Id = {message.chat.id}")
