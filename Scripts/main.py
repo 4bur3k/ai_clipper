@@ -9,12 +9,12 @@ from ClipMaker import ClipMaker
 from img_generator import Imaginator
 
 
-
 DB_PATH = '../users.db'
 IMG_DIR_PATH = f'./../data/tmp_imgs/'
 AUD_DIR_PATH = f'./../data/tmp_audio/'
 RES_DIR_PATH = f'./../resoult/'
 CLIP_GENERATOR = Imaginator()
+
 
 # Connects application to database. Returns db_connection, cursor
 def create_connection(db_path=DB_PATH):
@@ -25,7 +25,6 @@ def create_connection(db_path=DB_PATH):
         return db_con, c
     except Error as e:
         logging.exception(e)
-
 
 
 logging.basicConfig(filename='ai_clipper.log',
@@ -60,12 +59,11 @@ def start(message):
     user_exists = bool(c.execute(f"SELECT COUNT(1) FROM Users WHERE Id = {message.chat.id}").fetchone()[0])
     reply = STRINGS['bot_answers']['start']
     if not user_exists:
-        c.execute(f"INSERT INTO Users (Id, Position) VALUES ({message.chat.id}, -1)")
+        c.execute(f"INSERT INTO Users (Id) VALUES ({message.chat.id})")
         db_con.commit()
     status = c.execute(f"SELECT Status FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
     if status == 'Clip':
-        user_pos = c.execute(f"SELECT Position FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
-        reply = STRINGS['bot_answers']['clip_command'].format(value=user_pos)
+        reply = STRINGS['bot_answers']['clip_command']
     c.close()
     db_con.close()
     bot.send_message(message.chat.id, reply)
@@ -79,8 +77,7 @@ def set_network(message):
     if user_exists:
         status = c.execute(f"SELECT Status FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
         if status == 'Clip':
-            user_pos = c.execute(f"SELECT Position FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
-            reply = STRINGS['bot_answers']['clip_command'].format(value=user_pos)
+            reply = STRINGS['bot_answers']['clip_command']
         else:
             c.execute(f"UPDATE Users SET Status = 'Network' WHERE Id = {message.chat.id}")
             db_con.commit()
@@ -104,8 +101,7 @@ def set_artist(message):
     if user_exists:
         status = c.execute(f"SELECT Status FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
         if status == 'Clip':
-            user_pos = c.execute(f"SELECT Position FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
-            reply = STRINGS['bot_answers']['clip_command'].format(value=user_pos)
+            reply = STRINGS['bot_answers']['clip_command']
         else:
             c.execute(f"UPDATE Users SET Status = 'Artist' WHERE Id = {message.chat.id}")
             db_con.commit()
@@ -125,8 +121,7 @@ def set_song(message):
     if user_exists:
         status = c.execute(f"SELECT Status FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
         if status == 'Clip':
-            user_pos = c.execute(f"SELECT Position FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
-            reply = STRINGS['bot_answers']['clip_command'].format(value=user_pos)
+            reply = STRINGS['bot_answers']['clip_command']
         else:
             c.execute(f"UPDATE Users SET Status = 'Song' WHERE Id = {message.chat.id}")
             db_con.commit()
@@ -146,8 +141,7 @@ def set_style(message):
     if user_exists:
         status = c.execute(f"SELECT Status FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
         if status == 'Clip':
-            user_pos = c.execute(f"SELECT Position FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
-            reply = STRINGS['bot_answers']['clip_command'].format(value=user_pos)
+            reply = STRINGS['bot_answers']['clip_command']
         else:
             c.execute(f"UPDATE Users SET Status = 'Style' WHERE Id = {message.chat.id}")
             db_con.commit()
@@ -169,50 +163,45 @@ def clip(message):
     else:  # user exists in DB
         status = c.execute(f"SELECT Status FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
         if status == 'Clip':
-            user_pos = c.execute(f"SELECT Position FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
-            reply = STRINGS['bot_answers']['clip_command'].format(value=user_pos)
+            reply = STRINGS['bot_answers']['clip_command']
         else:
             user_data = c.execute(f"SELECT * FROM Users WHERE Id = {message.chat.id}").fetchone()
             if user_data[1] is not None and user_data[2] is not None:  # there IS enough data to start clipping
-                max_pos = c.execute(f"SELECT MAX(Position) FROM Users WHERE NOT Id = {message.chat.id}").fetchone()[0] # NOT WORKING. THINK ABOUT INITIALIZATION AND CHEKING IT'S NOT NONE
-                max_pos = 1
-                if max_pos == -1:
-                    max_pos += 1
-                if user_data[3] is not None:  # there is also a network chosen
-                    c.execute(f"UPDATE Users SET Position = {max_pos + 1},"
-                              f"Status = 'Clip' WHERE Id = {message.chat.id}")
-                    reply = STRINGS['bot_answers']['clip_command'].format(value=max_pos + 1)
-                else:
-                    c.execute(
-                        f"UPDATE Users SET Position = {max_pos + 1}, Status = 'Clip',"
-                        f"Network = 'ruDALL-E' WHERE Id = {message.chat.id}")
-                    reply = STRINGS['bot_answers']['clip_command'].format(value=max_pos + 1) + '\nSince you haven' \
-                                                                                               '\'t chosen the ' \
-                                                                                               'network, DALL-E is' \
-                                                                                               ' used by default'
-                db_con.commit()
-                logging.info(f'User {message.chat.username}:{message.chat.id} is clipping. {user_data}')
-
-                clip_maker = ClipMaker(artist=user_data[1], song=user_data[2])
-                lyrics = clip_maker.get_song_text()
-
-                images_was_generated = CLIP_GENERATOR.generateImages(text=lyrics)
-
-                images_was_generated = True #REMOVE!!!!!!!!!!!!!!!!!
-
-                if images_was_generated:
-                    clip_maker.download_music(AUD_DIR_PATH)
-                    clip_maker.jpeg2mp3(IMG_DIR_PATH, AUD_DIR_PATH, RES_DIR_PATH)
-                else:
-                    pass
-                    
-                if lyrics is not None:
-                    reply += f'\n\n{lyrics[0]}'
-                else:
-                    c.execute(f"UPDATE Users SET Artist = NULL, Song = NULL, Network = NULL, Style = NULL,"
-                              f"Status = NULL, Position = -1")
+                model_busy = bool(c.execute("SELECT COUNT(1) FROM Users WHERE Status = 'Clip'"))
+                if not model_busy:  # model not busy
+                    if user_data[3] is not None:  # there is also a network chosen
+                        c.execute(f"UPDATE Users SET Status = 'Clip' WHERE Id = {message.chat.id}")
+                        reply = STRINGS['bot_answers']['clip_command']
+                    else:
+                        c.execute(
+                            f"UPDATE Users SET Status = 'Clip', Network = 'ruDALL-E' WHERE Id = {message.chat.id}")
+                        reply = STRINGS['bot_answers']['clip_command'] + '\nSince you haven\'t chosen the network, ' \
+                                                                         'DALL-E is used by default'
                     db_con.commit()
-                    reply = STRINGS['bot_answers']['no_such_song_reply'].format(artist=user_data[1], song=user_data[2])
+                    logging.info(f'User {message.chat.username}:{message.chat.id} is clipping. {user_data}')
+
+                    clip_maker = ClipMaker(artist=user_data[1], song=user_data[2])
+                    lyrics = clip_maker.get_song_text()
+
+                    images_was_generated = CLIP_GENERATOR.generateImages(text=lyrics)
+
+                    images_was_generated = True #REMOVE!!!!!!!!!!!!!!!!!
+
+                    if images_was_generated:
+                        clip_maker.download_music(AUD_DIR_PATH)
+                        clip_maker.jpeg2mp3(IMG_DIR_PATH, AUD_DIR_PATH, RES_DIR_PATH)
+                    else:
+                        pass
+
+                    if lyrics is not None:
+                        reply += f'\n\n{lyrics[0]}'
+                    else:
+                        c.execute("UPDATE Users SET Artist = NULL, Song = NULL, Network = NULL, Style = NULL,"
+                                  "Status = NULL")
+                        db_con.commit()
+                        reply = STRINGS['bot_answers']['no_such_song_reply'].format(artist=user_data[1], song=user_data[2])
+                else:
+                    reply = STRINGS['bot_answers']['model_busy']
             else:
                 reply = 'Whoops! Seems like you haven\'t set the artist or the song you want to clip.\nUse at least' \
                         ' /set_artist and /set_song to make clipping possible.'
@@ -249,11 +238,10 @@ def handle_text(message):
             c.execute(f"UPDATE Users SET Style = {repr(message.text)}, Status = NULL WHERE Id = {message.chat.id}")
             reply = f'Set style: {message.text}'
         elif status == 'Clip':
-            user_pos = c.execute(f"SELECT Position FROM Users WHERE Id = {message.chat.id}").fetchone()[0]
-            reply = STRINGS['bot_answers']['clip_command'].format(value=user_pos)
+            reply = STRINGS['bot_answers']['clip_command']
         else:
             logging.info('Status is not recognized')
-            reply = 'Use the listed commands to add the information needed'
+            reply = 'Use the listed commands to add the information needed or to start the clipping process'
         db_con.commit()
     bot.send_message(message.chat.id, reply, reply_markup=types.ReplyKeyboardRemove())
     c.close()
